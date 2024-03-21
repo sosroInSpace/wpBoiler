@@ -1,0 +1,72 @@
+
+var gulp = require("gulp"),
+    sass = require("gulp-sass"),
+    postcss = require("gulp-postcss"),
+    autoprefixer = require("autoprefixer"),
+    cssnano = require("cssnano"),
+    connect = require('gulp-connect-php'),
+    minify = require('gulp-minify'),
+    imagemin = require('gulp-imagemin'); 
+    livereload = require('gulp-livereload');
+
+var paths = {
+    styles: {
+        src: "./assets/sass/**/*.scss",
+        dest: "./build/css"
+    },
+    scripts: {
+        src: "./assets/js/**/*.js",
+        dest: "./build/js"
+    },
+    images:{
+        src: "./assets/images/*",
+        dest: "./build/images"
+    }
+ }
+
+ var proxyURL = 'localhost:8080';
+
+//optimise images - this syntax is different beause its not included in the gulp watch
+gulp.task('image', () =>
+    gulp.src(paths.images.src)
+        .pipe(imagemin())
+        .pipe(gulp.dest(paths.images.dest))
+);
+
+//optimise css 
+function style() {
+    return (
+        gulp
+            .src(paths.styles.src)
+            .pipe(sass())
+            .on("error", sass.logError)
+            .pipe(postcss([autoprefixer(), cssnano()]))
+            .pipe(gulp.dest(paths.styles.dest))
+            .pipe(livereload())
+    );
+}
+exports.style = style;
+
+
+//optimise scripts
+function script() {
+    return (
+        gulp
+            .src(paths.scripts.src)
+            .pipe(minify({}))
+            .pipe(gulp.dest(paths.scripts.dest))
+            .pipe(livereload())
+    )
+}
+exports.script = script;
+
+
+
+//watch for changes to css js and php files
+function watch(){
+    livereload.listen({start: true, reloadPage: 'index.html'});
+    gulp.watch(paths.styles.src, style);
+    gulp.watch(paths.scripts.src, script);
+
+}
+exports.watch = watch
